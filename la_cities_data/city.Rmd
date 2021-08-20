@@ -1,0 +1,105 @@
+---
+title: "city"
+author: "Jianing Chen"
+date: "6/24/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Load Libraries
+```{r}
+library(tidyr)
+library(dplyr)
+library(readr)
+library(purrr)
+library(tibble)
+library(stringr)
+library(forcats)
+library(ggplot2)
+library(lubridate)
+library(MASS)
+library(reshape2)
+library(reshape)
+library(network)
+library(tidygraph)
+library(ggraph)
+library(plotly)
+library(visNetwork)
+library(networkD3)
+library(here)
+#lab.dir <- here("static/slides/11-interactive-viz/lab/")
+```
+
+```{r}
+la_cities_file = dir_ls(data.dir, regexp = "long_city_data_061221.csv")
+la_cities_date = read.table(la_cities_file, sep=",",  header = TRUE)
+# names(la_cities_date)[1] =  'date'
+colnames(la_cities_date) = c("date", "community", "Idetectcum","D","I_detect_new","D_new")
+la_cities_date$date = as.Date(la_cities_date$date)
+la_cities_date
+```
+
+```{r}
+read_city_data <- function(cityname){
+  la_cities_file = dir_ls(data.dir, regexp = "long_city_data_061221.csv")
+  la_cities_date = read.table(la_cities_file, sep=",",  header = TRUE)
+  # names(la_cities_date)[1] =  'date'
+  colnames(la_cities_date) = c("date", "community", "Idetectcum","D","I_detect_new","D_new")
+  la_cities_date$date = as.Date(la_cities_date$date)
+  name = cityname
+  each_city = subset(la_cities_date, community == name)
+  rownames(each_city) <- NULL
+  # remove the city name 
+  each_city = each_city[, !(colnames(each_city) %in% c("community"))]
+  
+  st <- as.Date("2020-03-01")
+  en <- as.Date("2020-03-16")
+  oneto17 = data.frame(date = base::seq(st, en, "day"),
+                    Idetectcum = rep(0,16), 
+                    D = rep(0,16),
+                    I_detect_new = rep(0,16),
+                    D_new =  rep(0,16))
+  
+  return(rbind(oneto17,each_city))
+}
+
+read_city_data("City of Artesia") 
+```
+
+```{r}
+st <- as.Date("2020-03-01")
+en <- as.Date("2020-03-16")
+oneto7 = data.frame(date = base::seq(st, en, "day"),
+                    Idetectcum = rep(0,16), 
+                    D = rep(0,16),
+                    I_detect_new = rep(0,16),
+                    D_new =  rep(0,16))
+oneto7
+
+
+
+```
+```{r}
+population_data <- function(cityname){
+  pop_file = dir_ls(data.dir, regexp = "population_061221.csv")
+  pop_data = read.table(pop_file, sep=",",  header = TRUE)
+  name = cityname
+  S_ini=pop_data$Population[pop_data$Community==name]
+  return(S_ini)
+}
+```
+
+```{r}
+S_ini = population_data("City of Santa Monica")
+```
+
+```{r}
+pop_file = dir_ls(data.dir, regexp = "population_061221.csv")
+pop_data = read.table(pop_file, sep=",",  header = TRUE)
+name = "City of Santa Monica"
+pop_data$Population[pop_data$Community==name]
+```
+

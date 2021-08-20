@@ -1,0 +1,23 @@
+---
+title: "Untitled"
+author: "Jianing Chen"
+date: "7/20/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+data =  read.csv("/Users/juliachen/Desktop/la_demg_data/result_death2.csv")
+data$Date <- as.Date(data$Date)
+```
+
+```{r}
+summary.LA = data %>%
+  dplyr::mutate(Diff_day = Date - lag(Date),
+         new_cases = data$value - lag(data$value)) 
+summary.LA
+```
+
+```{r}
+write.csv(summary.LA,"/Users/juliachen/Desktop/la_demg_data/result_death3.csv", row.names = FALSE)
+```
+
