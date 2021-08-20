@@ -1,0 +1,153 @@
+---
+title: "city"
+author: "Jianing Chen"
+date: "6/11/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Load Libraries
+```{r}
+library(tidyr)
+library(dplyr)
+library(readr)
+library(purrr)
+library(tibble)
+library(stringr)
+library(forcats)
+library(ggplot2)
+library(lubridate)
+library(MASS)
+library(reshape2)
+library(reshape)
+library(network)
+library(tidygraph)
+library(ggraph)
+library(plotly)
+library(visNetwork)
+library(networkD3)
+library(here)
+#lab.dir <- here("static/slides/11-interactive-viz/lab/")
+```
+#Load data
+```{r}
+#case_data <- read.csv("https://raw.githubusercontent.com/datadesk/california-coronavirus-data/master/cdph-hospital-patient-county-totals.csv")
+#case_data <- subset(case_data, county == "Los Angeles")
+
+#case_data <- as.data.frame(data.table::fread("https://raw.githubusercontent.com/datadesk/california-coronavirus-data/master/cdph-hospital-patient-county-totals.csv", stringsAsFactors = TRUE) )
+
+case_data <- as.data.frame(data.table::fread("https://raw.githubusercontent.com/datadesk/california-coronavirus-data/master/latimes-place-totals.csv", stringsAsFactors = TRUE) )
+
+case_data <- case_data %>% dplyr::filter(county=="Los Angeles")
+case_data$date <- as.Date(case_data$date)
+case_data$name <- as.character(case_data$name)
+data <- case_data
+data
+
+```
+```{r}
+data =  read.csv("/Users/juliachen/Desktop/la_demg_data/result.2.csv")
+data$Date <- as.Date(data$Date)
+data
+```
+```{r}
+names(data)[2] = "Age-0to17"
+names(data)[3] = "Age-18to40"
+names(data)[4] = "Age-41to65"
+names(data)[5] = "Age-18to29"
+names(data)[6] = "Age-30to49"
+names(data)[7] = "Age-50to64"
+names(data)[8] = "Age-65older"
+names(data)[9] = "Age-UnderInvest"
+
+names(data)[10] = "Race-AmericanIndianAlaskaNative"
+names(data)[11] = "Race-Asian"
+names(data)[12] = "Race-Black"
+names(data)[13] = "Race-Hispanic"
+names(data)[14] = "Race-NativeHawaiian"
+names(data)[15] = "Race-White"
+names(data)[16] = "Race-Othern"
+names(data)[17] = "Race-UnderInvest"
+
+names(data)[18] = "Sex-Female"
+names(data)[19] = "Sex-Male"
+names(data)[20] = "Sex-Other"
+names(data)[21] = "Sex-UnderInvest"
+
+write.csv(data,"/Users/juliachen/Desktop/la_demg_data/result2.2.csv", row.names = FALSE)
+```
+
+
+#Create daily table total
+```{r}
+summary.LA = data %>%
+  group_by(Date) %>% 
+  dplyr::summarise(confirmed_cases = data$`Age-0to17`) %>%
+  ungroup()
+
+summary.LA
+```
+
+
+```{r}
+summary.LA = data %>%
+  dplyr::mutate(Diff_day = Date - lag(Date),
+         new_cases = data$Age.0to17 - lag(data$Age.0to17)) 
+summary.LA
+```
+
+```{r}
+summary.LA = summary.LA %>%
+  arrange(date) %>%  # first sort by day
+  dplyr::mutate(Diff_day = date - lag(date),  # Difference in time (just in case there are gaps)
+         new_cases = confirmed_cases - lag(confirmed_cases)) # Difference in case between days 
+summary.LA
+```
+
+
+
+#Create daily table per City
+```{r}
+summary.city <- data %>%
+  group_by(date, name) %>% 
+  dplyr::summarise(confirmed_cases = sum(confirmed_cases)) %>%
+  ungroup()
+summary.city
+
+#unique(summary.city$name)
+
+```
+#Add number of new case per city
+```{r}
+summary.city = summary.city %>%
+  group_by(name) %>%
+  arrange(date) %>%  # first sort by day
+  dplyr::mutate(Diff_day = date - lag(date),  # Difference in time (just in case there are gaps)
+         new_cases = confirmed_cases - lag(confirmed_cases)) %>% # Difference in case between days 
+ arrange(name)
+summary.city
+```
+## Plots {.tabset}
+### LA County
+```{r}
+LA.plot <- ggplot(data = summary.LA, aes(x = date, y = confirmed_cases)) + 
+  geom_line()
+ggplotly(LA.plot)
+```
+### By City
+```{r}
+City.plot <- ggplot(data = subset(summary.city, name %in% c("East Los Angeles", "Santa Monica", "Boyle Heights", "Woodland Hills", "Sierra Madre")), aes(x = date, y = new_cases, color = name)) +
+  geom_line()
+ggplotly(City.plot)
+# City.plot <- ggplot(data = summary.city, aes(x = date, y = new_cases, color = name)) +
+#   geom_line()
+# 
+# ggplotly(City.plot)
+```
+{-}
+```{r}
+#write_csv(data, "data.csv")
+```
